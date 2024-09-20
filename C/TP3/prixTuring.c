@@ -22,37 +22,83 @@
 // VARIABLES
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-struct prixTuring {
+typedef struct {
 	unsigned short annee;
 	char* nom;
 	char* sujet;
-};
+} Vainqueur;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // FONCTIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+/*
 
-int numberOfWinners(FILE* farg) {
-	char c="";
-	int numeroChamp=1;
-	bool champNon = false;
+int numberOfWinners(FILE*) {
 	FILE* fichier;
-	int nbLignes=0;
-	while (c != EOF) {
-		c=fgetc(fichier);
-		if (c == "\n") {
-			//On est sur une nouvelle ligne
-			while(c != "\n") {
-				
-			}
+	char* ligneCourante;
+	char* champNom;
+	int longueurChampNon;
+	int nbWinner=0;
+	char c;
 
+	while (fgets(ligneCourante,1024,fichier) != NULL) {
+		//fgets(ligneCourante,1024,fichier);
+		champNom = strtok(ligneCourante,";")[1];
+		longueurChampNon=sizeof(champNom)/sizeof(champNom[0]);
+		for (int i=0;i<longueurChampNon;i++) {
+			if (champNom[i]==",") {
+				nbWinner+=1;
+			}
+			if (strstr(champNom," et ") != NULL) {
+				nbWinner+=1;
+			}
 		}
-	};
-	return nbLignes;
+	}
+	return nbWinner;
 }
 
-readWinners(FILE* ) {
+*/
+
+int numberOfWinners(FILE* f) {
+	char* ligneCourante;
+	int nbWinner=0;
+	char filename[] = "turingWinners.csv";
+
+	f = fopen(filename,"r");
+	while (fgets(ligneCourante,1024,f) != NULL) {
+		nbWinner+=1;
+	}
+	rewind(f);
+	return nbWinner;
+}
+
+
+readWinners(FILE* f) {
+	char* ligneCourante;
+	char filename[] = "turingWinners.csv";
+	f = fopen(filename,"r");
+	char* champAnnee;
+	char* champNom;
+	char* champSujet;
+
+	while (fgets(ligneCourante,1024,f) != NULL) {
+		Vainqueur vainqueur;
+		vainqueur.annee = strtok(ligneCourante,";")[0];
+		vainqueur.nom = strtok(ligneCourante,";")[1];
+		vainqueur.sujet = strtok(ligneCourante,";")[2];
+	}
+}
+
+Vainqueur* readWinners(int nbWinner, FILE* f) {
+	Vainqueur* winners = calloc(nbWinner,sizeof(Vainqueur));
+	for (int i=0;i<nbWinner;i++) {
+		readWinner(&winners[i],f);
+	}
+	return winners;
+}
+
+void readWinner(Vainqueur* winner, FILE* f) {
 
 }
 
@@ -69,6 +115,12 @@ int main(int argc, char** argv)
 
 	f = fopen(filename,"r");
 	out = fopen(outputFilename,"a");
+
+	int nbWinner = numberOfTuringWinner(f);
+	rewind(f);
+
+	//Vainqueur* vainqueur
+
 
 	char c="";
 	while (c != EOF) {
