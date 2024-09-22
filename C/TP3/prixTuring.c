@@ -61,7 +61,7 @@ int numberOfWinners(FILE*) {
 */
 
 int numberOfWinners(FILE* f) {
-	char* ligneCourante;
+	char ligneCourante[1024];
 	int nbWinner=0;
 	char filename[] = "turingWinners.csv";
 
@@ -70,36 +70,33 @@ int numberOfWinners(FILE* f) {
 		nbWinner+=1;
 	}
 	rewind(f);
+
 	return nbWinner;
 }
 
-
-readWinners(FILE* f) {
-	char* ligneCourante;
-	char filename[] = "turingWinners.csv";
-	f = fopen(filename,"r");
-	char* champAnnee;
-	char* champNom;
-	char* champSujet;
-
-	while (fgets(ligneCourante,1024,f) != NULL) {
-		Vainqueur vainqueur;
-		vainqueur.annee = strtok(ligneCourante,";")[0];
-		vainqueur.nom = strtok(ligneCourante,";")[1];
-		vainqueur.sujet = strtok(ligneCourante,";")[2];
-	}
-}
-
 Vainqueur* readWinners(int nbWinner, FILE* f) {
-	Vainqueur* winners = calloc(nbWinner,sizeof(Vainqueur));
-	for (int i=0;i<nbWinner;i++) {
-		readWinner(&winners[i],f);
-	}
-	return winners;
+    Vainqueur* winners = calloc(nbWinner, sizeof(Vainqueur));
+    for (int i = 0; i < nbWinner; i++) {
+        char ligneCourante[1024];
+        if (fgets(ligneCourante, sizeof(ligneCourante), f) != NULL) {
+            char* champAnnee = strtok(ligneCourante, ";");
+            char* champNom = strtok(NULL, ";");
+            char* champSujet = strtok(NULL, ";");
+
+            if (champAnnee != NULL && champNom != NULL && champSujet != NULL) {
+                winners[i].annee = atoi(champAnnee);
+                winners[i].nom = strdup(champNom);
+                winners[i].sujet = strdup(champSujet);
+            }
+        }
+    }
+    return winners;
 }
 
-void readWinner(Vainqueur* winner, FILE* f) {
-
+void printWinners(Vainqueur* winners, int nbWinners, FILE* out) {
+    for (int i = 0; i < nbWinners; i++) {
+        fprintf(out, "%u;%s;%s\n", winners[i].annee, winners[i].nom, winners[i].sujet);
+    }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,23 +113,39 @@ int main(int argc, char** argv)
 	f = fopen(filename,"r");
 	out = fopen(outputFilename,"a");
 
-	int nbWinner = numberOfTuringWinner(f);
+	if (f == NULL) {
+        fprintf(stderr, "Erreur : impossible d'ouvrir le fichier %s\n", filename);
+        return EXIT_FAILURE;
+    }
+	if (out == NULL) {
+        fprintf(stderr, "Erreur : impossible d'ouvrir le fichier %s\n", outputFilename);
+        return EXIT_FAILURE;
+    }
+
+	int nbWinner = numberOfWinners(f);
 	rewind(f);
 
-	//Vainqueur* vainqueur
+	Vainqueur* winners = readWinners(nbWinner, f);
+	rewind(f);
 
-
-	char c="";
-	while (c != EOF) {
-		c = fgetc(f);
+	/*
+	int c;
+	while ((c= fgetc(f)) != EOF) {
 		putc(c, out);
 	};
+	*/
+
+	printWinners(winners, nbWinner, out);
 
 
-    // TODO
-
+   for (int i = 0; i < nbWinner; i++) {
+        free(winners[i].nom);
+        free(winners[i].sujet);
+    }
+    free(winners);
 
 	fclose(f);
+	fclose(out);
 
 	return EXIT_SUCCESS;
 }
