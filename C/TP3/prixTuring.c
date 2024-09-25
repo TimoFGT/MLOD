@@ -32,58 +32,47 @@ typedef struct {
 // FONCTIONS
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-/*
-
-int numberOfWinners(FILE*) {
-	FILE* fichier;
-	char* ligneCourante;
-	char* champNom;
-	int longueurChampNon;
+int numberOfWinners(FILE* f) {
 	int nbWinner=0;
-	char c;
-
-	while (fgets(ligneCourante,1024,fichier) != NULL) {
-		//fgets(ligneCourante,1024,fichier);
-		champNom = strtok(ligneCourante,";")[1];
-		longueurChampNon=sizeof(champNom)/sizeof(champNom[0]);
-		for (int i=0;i<longueurChampNon;i++) {
-			if (champNom[i]==",") {
-				nbWinner+=1;
-			}
-			if (strstr(champNom," et ") != NULL) {
-				nbWinner+=1;
-			}
+	char ch;
+	while ((ch = fgetc(f)) != EOF) {
+		if (ch == '\n') {
+			nbWinner = nbWinner+1;
 		}
 	}
 	return nbWinner;
 }
+//Réponse du debuggeur: nbWinner = 57
+
+
+/*
+
+void readWinner(FILE* f, Vainqueur* winners, int count) {
+	char line[1024];
+	int i=0;
+	while (fgets(line,sizeof(line),f) && i < count) {
+		char* token = strtok(line,";");
+		winners[i].annee=atoi(token);
+		token=strtok(NULL,";");
+		winners[i].nom = malloc(strlen(token)+1);
+		strcpy(winners[i].nom,token);
+	}
+}
 
 */
 
-int numberOfWinners(FILE* f) {
-	char ligneCourante[1024];
-	int nbWinner=0;
-	char filename[] = "turingWinners.csv";
-
-	f = fopen(filename,"r");
-	while (fgets(ligneCourante,1024,f) != NULL) {
-		nbWinner+=1;
-	}
-	rewind(f);
-
-	return nbWinner;
-}
-
 Vainqueur* readWinners(int nbWinner, FILE* f) {
-    Vainqueur* winners = calloc(nbWinner, sizeof(Vainqueur));
+    Vainqueur* winners = malloc(nbWinner * sizeof(Vainqueur));
+	char ligneCourante[1024];
     for (int i = 0; i < nbWinner; i++) {
-        char ligneCourante[1024];
         if (fgets(ligneCourante, sizeof(ligneCourante), f) != NULL) {
+
             char* champAnnee = strtok(ligneCourante, ";");
             char* champNom = strtok(NULL, ";");
             char* champSujet = strtok(NULL, ";");
 
             if (champAnnee != NULL && champNom != NULL && champSujet != NULL) {
+
                 winners[i].annee = atoi(champAnnee);
                 winners[i].nom = strdup(champNom);
                 winners[i].sujet = strdup(champSujet);
@@ -95,6 +84,7 @@ Vainqueur* readWinners(int nbWinner, FILE* f) {
 
 void printWinners(Vainqueur* winners, int nbWinners, FILE* out) {
     for (int i = 0; i < nbWinners; i++) {
+		printf("%u;%s;%s\n", winners[i].annee, winners[i].nom, winners[i].sujet);
         fprintf(out, "%u;%s;%s\n", winners[i].annee, winners[i].nom, winners[i].sujet);
     }
 }
@@ -111,7 +101,7 @@ int main(int argc, char** argv)
 	FILE* out;
 
 	f = fopen(filename,"r");
-	out = fopen(outputFilename,"a");
+	out = fopen(outputFilename,"w");
 
 	if (f == NULL) {
         fprintf(stderr, "Erreur : impossible d'ouvrir le fichier %s\n", filename);
@@ -126,7 +116,8 @@ int main(int argc, char** argv)
 	rewind(f);
 
 	Vainqueur* winners = readWinners(nbWinner, f);
-	rewind(f);
+
+	printWinners(winners, nbWinner, out);
 
 	/*
 	int c;
@@ -134,9 +125,6 @@ int main(int argc, char** argv)
 		putc(c, out);
 	};
 	*/
-
-	printWinners(winners, nbWinner, out);
-
 
    for (int i = 0; i < nbWinner; i++) {
         free(winners[i].nom);
